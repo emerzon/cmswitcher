@@ -14,10 +14,11 @@ import requests
 
 # Static data
 blacklisted_algos = []
-pool_list = {"zpool": "http://www.zpool.ca/api/status"}
+pool_list = {"zpool": "http://www.zpool.ca/api/status",
+             "ahashpool": "https://www.ahashpool.com/api/status/"}
 minimum_daily_profitability = 0.001
-benchmark_timeout = 60
-
+benchmark_timeout = 45
+possible_references = ["estimate_current", "estimate_last24h", "actual_last24h"]
 
 def cpuminer_find_supported_algo():
     out = cpuminer("--help")
@@ -99,7 +100,7 @@ def run_all_benchmarks(skip_existing):
 
 def fetch_pool_info():
     pool_list_with_data = {}
-    fields_to_parse = ["estimate_current", "estimate_last24h", "actual_last24h"]
+
 
     for k, v in pool_list.iteritems():
         pool_list_with_data[k] = requests.get(v).json()
@@ -107,7 +108,7 @@ def fetch_pool_info():
         # Unit normalization for Zpool
         if k == "zpool":
             for algo in pool_list_with_data[k]:
-                for field in fields_to_parse:
+                for field in possible_references:
                     # These algos are rated in TH/s
                     if algo in ["sha256"]:
                         pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000 / 1000 / 1000 / 1000
@@ -120,8 +121,19 @@ def fetch_pool_info():
                     # By default, all other algos are MH/s
                     else:
                         pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000 / 1000
-
-
+        if k == "ahashpool":
+            # These algos are rated in TH/s
+            if algo in ["sha256", "sha256t"]:
+                pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000 / 1000 / 1000 / 1000
+            # These algos are rated in GH/s
+            elif algo in ["blake", "blake2s", "blakecoin", "decred", "keccak", "keccakc", "lbry", "myr-gr", "quark", "qubit", "vanilla", "x11"]:
+                pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000 / 1000 / 1000
+            # These algos are rated in KH/s
+            elif algo in ["equihash", "yescrypt"]:
+                pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000
+            # By default, all other algos are MH/s
+            else:
+                pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000 / 1000
 
     return pool_list_with_data
 
@@ -135,17 +147,19 @@ if __name__ == "__main__":
     benchmarked_algos = run_all_benchmarks(True)
     pool_info = fetch_pool_info()
     mbitcoin_value = fetch_mbitcoin_value()
-    algos_with_profit = []
 
+    algos_with_profit = []
     for pool, algos in pool_info.iteritems():
         for algo in algos:
-            if algo in benchmarked_algos and benchmarked_algos[algo] > 0:
-                local_hashrate = float(benchmarked_algos[algo])
-                pool_current_estimate = float(pool_info[pool][algo]['actual_last24h'])
-                value_per_day = local_hashrate * pool_current_estimate * mbitcoin_value
-                if value_per_day >= minimum_daily_profitability:
-                    algos_with_profit.append([algo, '{:,.4f}'.format(value_per_day)])
+            for rentability_tag in possible_references:
 
-        for k, v in sorted(algos_with_profit, key=lambda x: x[1], reverse=True):
-            print "%s - %s:USD %s / day" % (pool, k, v)
+                if algo in benchmarked_algos and benchmarked_algos[algo] > 0:
+                    local_hashrate = float(benchmarked_algos[algo])
+                    pool_current_estimate = float(pool_info[pool][algo][rentability_tag])
+                    value_per_day = local_hashrate * pool_current_estimate * mbitcoin_value
+                    if value_per_day >= minimum_daily_profitability:
+                        algos_with_profit.append([pool, algo, rentability_tag, value_per_day])
+
+    for pool, algo, rentability_tag, value_per_day in sorted(algos_with_profit, key=lambda x: x[3], reverse=True):
+        print "%s | %s | %s |  USD %s/day" % (pool, algo, rentability_tag, '{:,.4f}'.format(value_per_day))
 
