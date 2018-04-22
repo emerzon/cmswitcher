@@ -16,6 +16,7 @@ import requests
 blacklisted_algos = []
 pool_list = {"zpool": "http://www.zpool.ca/api/status"}
 minimum_daily_profitability = 0.001
+benchmark_timeout = 60
 
 
 def cpuminer_find_supported_algo():
@@ -34,11 +35,10 @@ def cpuminer_find_supported_algo():
 
 def cpuminer_perform_benchmark(algo):
     value = 0
-    timeout = 30
-    print "Benchmarking algorithm %s for %s seconds... " % (algo, timeout)
+    print "Benchmarking algorithm %s for %s seconds... " % (algo, benchmark_timeout)
     results = []
     try:
-        for line in cpuminer("-a", algo, "--benchmark", _timeout=timeout, _iter=True):
+        for line in cpuminer("-a", algo, "--benchmark", _timeout=benchmark_timeout, _iter=True):
             # print line
             if "Total" in line:
                 value = line.split(',')[1]
@@ -108,14 +108,19 @@ def fetch_pool_info():
         if k == "zpool":
             for algo in pool_list_with_data[k]:
                 for field in fields_to_parse:
+                    # These algos are rated in TH/s
                     if algo in ["sha256"]:
                         pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000 / 1000 / 1000 / 1000
-                    elif algo in ["scrypt", "blake", "decred", "x11", "quark", "qubit"]:
+                    # These algos are rated in GH/s
+                    elif algo in ["scrypt", "blakecoin", "decred", "x11", "quark", "qubit",  "sha256t", "keccak", "keccakc", "blake2s"]:
                         pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000 / 1000 / 1000
+                    # These algos are rated in KH/s
                     elif algo in ["equihash"]:
                         pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000
+                    # By default, all other algos are MH/s
                     else:
                         pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000 / 1000
+
 
 
     return pool_list_with_data
