@@ -11,6 +11,7 @@ import sh
 from sh import cpuminer
 import json
 
+
 def cpuminer_find_supported_algo():
     out = cpuminer("--help")
     add_line_to_result = False
@@ -32,7 +33,7 @@ def cpuminer_perform_benchmark(algo):
     results = []
     try:
         for line in cpuminer("-a", algo, "--benchmark", _timeout=timeout, _iter=True):
-            #print line
+            # print line
             if "Total" in line:
                 value = line.split(',')[1]
                 hashrate = normalize_hashrate(value.split()[0], value.split()[1])
@@ -76,6 +77,22 @@ def median(lst):
 
 
 def run_all_benchmarks(skip_existing):
+    try:
+        benchmarks = json.load(open('benchmarks.json'))
+        print "Reading existing benchmarks.json"
+        print benchmarks
+    except:
+        print "File benchmarks.json does not exist, creating a new one."
+        benchmarks = {}
 
     for algo in cpuminer_find_supported_algo():
-    print cpuminer_perform_benchmark(algo)
+        if algo not in benchmarks.keys() or skip_existing == False:
+            benchmark_result = cpuminer_perform_benchmark(algo)
+            if benchmark_result > 0:
+                benchmarks[algo] = benchmark_result
+                json.dump(benchmarks, open('benchmarks.json', 'w'), sort_keys=True, indent=4, separators=(',', ': '))
+                print "Updated benchmarks.json!"
+
+
+if __name__ == "__main__":
+    run_all_benchmarks(True)
