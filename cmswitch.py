@@ -105,35 +105,33 @@ def fetch_pool_info():
     for k, v in pool_list.iteritems():
         pool_list_with_data[k] = requests.get(v).json()
 
-        # Unit normalization for Zpool
+        # Unit normalization
         if k == "zpool":
             for algo in pool_list_with_data[k]:
                 for field in possible_references:
                     # These algos are rated in TH/s
                     if algo in ["sha256"]:
-                        pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000 / 1000 / 1000 / 1000
+                        pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000000000000
                     # These algos are rated in GH/s
                     elif algo in ["scrypt", "blakecoin", "decred", "x11", "quark", "qubit",  "sha256t", "keccak", "keccakc", "blake2s"]:
-                        pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000 / 1000 / 1000
+                        pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000000000
                     # These algos are rated in KH/s
                     elif algo in ["equihash"]:
                         pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000
                     # By default, all other algos are MH/s
                     else:
-                        pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000 / 1000
+                        pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000000
+    #* values in mBTC/Mh/day (mBTC/Gh/day for blake2s|blakecoin|quark|qubit|scrypt|x11, mBTC/Kh/day for yescrypt)
         if k == "ahashpool":
-            # These algos are rated in TH/s
-            if algo in ["sha256", "sha256t"]:
-                pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000 / 1000 / 1000 / 1000
             # These algos are rated in GH/s
-            elif algo in ["blake", "blake2s", "blakecoin", "decred", "keccak", "keccakc", "lbry", "myr-gr", "quark", "qubit", "vanilla", "x11"]:
-                pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000 / 1000 / 1000
+            if algo in ["blake2s", "blakecoin", "quark", "qubit", "scrypt", "x11"]:
+                pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000000000
             # These algos are rated in KH/s
-            elif algo in ["equihash", "yescrypt"]:
+            elif algo in ["yescrypt"]:
                 pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000
             # By default, all other algos are MH/s
             else:
-                pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000 / 1000
+                pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000000
 
     return pool_list_with_data
 
