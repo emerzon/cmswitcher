@@ -1,12 +1,23 @@
 {
     "ahashpool":
-    { "api": "https://www.ahashpool.com/api/status/",
+    { "api": "https://www.ahashpool.com/api/status",
       "algo_k": ["equihash", "yescrypt"],
       "algo_m": ["m7m", "neoscrypt", "xevan", "hmq1725", "bitcore", "skunk", "groestl", "keccak"],
       "algo_g": ["scrypt", "x16s", "x17", "x11", "x16r", "blake2s", "c11", "phi", "lyra2v2", "timetravel", "tribus",
                  "myr-gr", "skein", "nist5", "lbry"],
       "algo_t": [],
       "algo_p": []},
+
+    "blazepool":
+      { "api": "http://api.blazepool.com/status",
+      "algo_k": ["yescrypt", "sib"],
+      "algo_m": ["m7m", "xevan","hmq1725", "hsr", "scrypt", "myr-gr", "blakecoin", "groestl", "timetravel",
+                 "keccak", "lbry", "bitcore", "quark"],
+      "algo_g": ["lyra2v2", "neoscrypt", "x17", "x16s", "tribus", "phi", "x16r", "skein", "qubit", "x11", "c11",
+                 "skunk", "nist5"],
+      "algo_t": ["blake2s"],
+      "algo_p": []},
+
     "zpool":
     { "api": "http://www.zpool.ca/api/status",
       "algo_k": ["yescryptR16"],
