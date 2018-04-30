@@ -14,11 +14,11 @@ import requests
 
 # Static data
 blacklisted_algos = []
-pool_list = {"zpool": "http://www.zpool.ca/api/status",
-             "ahashpool": "https://www.ahashpool.com/api/status/"}
-minimum_daily_profitability = 0.001
+
+minimum_daily_profitability = 0.000001
 benchmark_timeout = 45
 possible_references = ["estimate_current", "estimate_last24h", "actual_last24h"]
+
 
 def cpuminer_find_supported_algo():
     out = cpuminer("--help")
@@ -100,45 +100,32 @@ def run_all_benchmarks(skip_existing):
 
 def fetch_pool_info():
     pool_list_with_data = {}
-
+    pool_list = json.load(open('pools.json'))
 
     for k, v in pool_list.iteritems():
-        pool_list_with_data[k] = requests.get(v).json()
+        pool_list_with_data[k] = requests.get(v["api"]).json()
 
-        # Unit normalization
-        if k == "zpool":
-            for algo in pool_list_with_data[k]:
-                for field in possible_references:
-                    # These algos are rated in TH/s
-                    if algo in ["sha256"]:
-                        pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000000000000
-                    # These algos are rated in GH/s
-                    elif algo in ["scrypt", "blakecoin", "decred", "x11", "quark", "qubit",  "sha256t", "keccak", "keccakc", "blake2s"]:
-                        pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000000000
-                    # These algos are rated in KH/s
-                    elif algo in ["equihash"]:
-                        pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000
-                    # By default, all other algos are MH/s
-                    else:
-                        pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000000
-    #* values in mBTC/Mh/day (mBTC/Gh/day for blake2s|blakecoin|quark|qubit|scrypt|x11, mBTC/Kh/day for yescrypt)
-        if k == "ahashpool":
-            # These algos are rated in GH/s
-            if algo in ["blake2s", "blakecoin", "quark", "qubit", "scrypt", "x11"]:
-                pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000000000
-            # These algos are rated in KH/s
-            elif algo in ["yescrypt"]:
-                pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000
-            # By default, all other algos are MH/s
-            else:
-                pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000000
+        for algo in pool_list_with_data[k]:
+            for field in possible_references:
+                if algo in v["algo_k"]:
+                    pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000
+                elif algo in v["algo_m"]:
+                    pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000000
+                elif algo in v["algo_g"]:
+                    pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000000000
+                elif algo in v["algo_t"]:
+                    pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000000000000
+                elif algo in v["algo_p"]:
+                    pool_list_with_data[k][algo][field] = float(pool_list_with_data[k][algo][field]) / 1000000000000000
+                else:
+                    pool_list_with_data[k][algo][field] = 0
 
     return pool_list_with_data
 
 
 def fetch_mbitcoin_value():
     value = requests.get("https://api.coindesk.com/v1/bpi/currentprice.json").json()
-    return float(value['bpi']['USD']['rate'].replace(",", ""))/1000
+    return float(value['bpi']['USD']['rate'].replace(",", "")) / 1000
 
 
 if __name__ == "__main__":
@@ -151,8 +138,8 @@ if __name__ == "__main__":
         for algo in algos:
             for rentability_tag in possible_references:
 
-                if algo in benchmarked_algos and benchmarked_algos[algo] > 0:
-                    local_hashrate = float(benchmarked_algos[algo])
+                if algo.lower() in benchmarked_algos and benchmarked_algos[algo.lower()] > 0:
+                    local_hashrate = float(benchmarked_algos[algo.lower()])
                     pool_current_estimate = float(pool_info[pool][algo][rentability_tag])
                     value_per_day = local_hashrate * pool_current_estimate * mbitcoin_value
                     if value_per_day >= minimum_daily_profitability:
@@ -160,4 +147,3 @@ if __name__ == "__main__":
 
     for pool, algo, rentability_tag, value_per_day in sorted(algos_with_profit, key=lambda x: x[3], reverse=True):
         print "%s | %s | %s |  USD %s/day" % (pool, algo, rentability_tag, '{:,.4f}'.format(value_per_day))
-
