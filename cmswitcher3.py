@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import subprocess
 import re
 import requests
@@ -8,7 +9,10 @@ import time
 benchmark_period = 120
 min_shares = 2
 
-miners = {"cpuminer": {"url": "https://chita.com.br/miners/cpuminer-%s.tar.bz2",
+miners = {"cpuminer-opt": {"url": "https://chita.com.br/miners/cpuminer-opt-%s.tar.bz2",
+                       "launch_pattern": "-u {wallet} -o stratum+tcp://{url}:{port} -p {password} -b 127.0.0.1:40101",
+                       "offline_bench_pattern": "--benchmark -b 127.0.0.1:40101"},
+          "cpuminer-rkz": {"url": "https://chita.com.br/miners/cpuminer-rkz-%s.tar.bz2",
                        "launch_pattern": "-u {wallet} -o stratum+tcp://{url}:{port} -p {password} -b 127.0.0.1:40101",
                        "offline_bench_pattern": "--benchmark -b 127.0.0.1:40101"}}
 pools = {"zergpool": {"api": "http://api.zergpool.com:8080/api/status",
@@ -45,13 +49,18 @@ def get_cpuflags_hash():
 
 def miner_find_supported_algo(miner_name):
     print("Probing miner %s..." % miner_name, end="")
-    if miner_name == 'cpuminer':
-        out = subprocess.check_output(["cpuminer", "-h"]).decode("utf-8")
+    if miner_name in ['cpuminer-opt']:
+        out = subprocess.check_output([miner_name, "-h"]).decode("utf-8")
         # This is super ugly and might break in different versions... :(
         match = re.findall(r'(?!^\s*[-(].*$)^\s{20,26}(.*?)(?:\s).*$', out, re.MULTILINE)
+    elif miner_name in ['cpuminer-rkz']:
+        out = subprocess.check_output([miner_name, "-h"]).decode("utf-8")
+        # This is super ugly and might break in different versions... :(
+        match = re.findall(r'^\s+(\w+power.*?)\s+(?:\s).*$', out, re.MULTILINE)
     else:
         match = []
     print("%s algos supported" % len(match))
+    print (match)
     return match
 
 
@@ -157,18 +166,21 @@ def run_all_benchmarks(skip_existing):
                               sort_keys=True, indent=4, separators=(',', ': '))
                     print("Updated benchmark-%s.json !" % miner)
 
-def list_profitability(algo, hashrate, pool):
+def list_profitability(algo, hashrate):
 
     mbtc = fetch_mbitcoin_value()
     btc = mbtc * 1000
     revenues = {}
-    fields = ['estimate_current', 'estimate_last24h']
-    for field in fields:
-        revenues[field] = float(pools[pool]["results"][algo][field]) / (float(hashrate) * float(pools[pool]["results"][algo]["mbtc_mh_factor"])) * btc
 
-    fields = ['actual_last24h', 'actual_last24h_shared', 'actual_last24h_solo']
-    for field in fields:
-        revenues[field] = float(pools[pool]["results"][algo][field]) / (float(hashrate) * float(pools[pool]["results"][algo]["mbtc_mh_factor"])) * mbtc
+    for pool in pools:
+
+        fields = ['estimate_current', 'estimate_last24h']
+        for field in fields:
+            revenues[field] = float(pools[pool]["results"][algo][field]) / (float(hashrate) * float(pools[pool]["results"][algo]["mbtc_mh_factor"])) * btc
+
+        fields = ['actual_last24h', 'actual_last24h_shared', 'actual_last24h_solo']
+        for field in fields:
+            revenues[field] = float(pools[pool]["results"][algo][field]) / (float(hashrate) * float(pools[pool]["results"][algo]["mbtc_mh_factor"])) * mbtc
 
     return revenues
 
