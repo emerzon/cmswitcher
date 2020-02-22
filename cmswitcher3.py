@@ -14,7 +14,7 @@ miners = {"cpuminer": {"url": "https://chita.com.br/miners/cpuminer-%s.tar.bz2",
 pools = {"zergpool": {"api": "http://api.zergpool.com:8080/api/status",
                       "mine_url": "{algo}.mine.zergpool.com",
                       "wallet": "ME1xYgz1mtCTiJW7UMEP82S7NeQoJvwL7o",
-                      "password": "c=LTC"}}
+                      "password": "c=LTC,sd=1"}}
 
 algo_name_variations = [
     ['argon2d500', 'argon2d-dyn']
@@ -98,7 +98,7 @@ def benchmark(miner, algo, pool_params):
         print("Offline benchmark for %s - %s" % (miner, algo))
         proc = subprocess.Popen([miner, '-a', algo] + miners[miner]["offline_bench"].split(" "), stdout=subprocess.PIPE)
 
-    print("Launched pid %s" % proc.pid)
+    # print("Launched pid %s" % proc.pid)
     # UGLY HACK - To be fixed
     time.sleep(5)
 
@@ -112,18 +112,22 @@ def benchmark(miner, algo, pool_params):
             accepted_shares = int(ret["ACC"])
             if hashrate > max_hashrate:
                 max_hashrate = hashrate
-            print("[Seconds remaining: %s] - Accepted shares: %s - Current hashrate: %s - max: %s                         \r" % (int(t_end-time.time()), accepted_shares, hashrate, max_hashrate), end="")
+            print("[%s %s](%ss) Shares: %sA/%sR - Hashrate: %s/Max: %s                         \r" % (miner, algo, int(t_end-time.time()), accepted_shares, int(ret["REJ"]), hashrate, max_hashrate), end="")
             time.sleep(1)
         proc.kill()
         print("[FINISHED]: Using hashrate %s for %s (%s accepted shares)                             " % (max_hashrate, algo, accepted_shares))
         use_rate = max_hashrate
         if accepted_shares == 0:
             print("[WARNING]: No accepted shares!")
-            use_rate = False
     else:
         print("Error launching miner")
         use_rate = False
     return use_rate
+
+
+def fetch_mbitcoin_value():
+    value = requests.get("https://api.coindesk.com/v1/bpi/currentprice.json").json()
+    return float(value['bpi']['USD']['rate'].replace(",", "")) / 1000
 
 
 def run_all_benchmarks(skip_existing):
@@ -153,7 +157,26 @@ def run_all_benchmarks(skip_existing):
                               sort_keys=True, indent=4, separators=(',', ': '))
                     print("Updated benchmark-%s.json !" % miner)
 
+def list_profitability(algo, hashrate, pool):
+
+    mbtc = fetch_mbitcoin_value()
+    btc = mbtc * 1000
+    revenues = {}
+    fields = ['estimate_current', 'estimate_last24h']
+    for field in fields:
+        revenues[field] = float(pools[pool]["results"][algo][field]) / (float(hashrate) * float(pools[pool]["results"][algo]["mbtc_mh_factor"])) * btc
+
+    fields = ['actual_last24h', 'actual_last24h_shared', 'actual_last24h_solo']
+    for field in fields:
+        revenues[field] = float(pools[pool]["results"][algo][field]) / (float(hashrate) * float(pools[pool]["results"][algo]["mbtc_mh_factor"])) * mbtc
+
+    return revenues
+
 
 if __name__ == "__main__":
     populate_supported_algos()
     benchmarked_algos = run_all_benchmarks(True)
+
+    #print (list_profitability("yespowerR16", 1000, "zergpool"))
+
+
