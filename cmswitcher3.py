@@ -23,7 +23,8 @@ pools = {"zergpool": {"api": "http://api.zergpool.com:8080/api/status",
                       "password": "c=LTC,sd=1"}}
 
 algo_name_variations = [
-    ['argon2d500', 'argon2d-dyn']
+    ['argon2d500', 'argon2d-dyn'],
+    ['power2b', 'yespower2b']
 ]
 
 # Inits
@@ -50,6 +51,23 @@ def get_cpuflags_hash():
     # zen-tr = 0a8e7444
     # zen2   = 46b820de
     # 'cat /proc/cpuinfo | grep flags | uniq | md5sum | cut -b 1-8'
+
+
+def find_pool_algo_name(pool, algo):
+    result = None
+    if algo in pools[pool]["results"].keys():
+        result = algo
+    else:
+        for entry in pools[pool]["results"].keys():
+            if entry.lower() == algo.lower():
+                result = entry
+    if result is None:
+        for variation in algo_name_variations:
+            if algo in variation:
+                for entry in variation:
+                    if entry in pools[pool]["results"].keys():
+                        result = entry
+    return result
 
 
 def miner_find_supported_algo(miner_name):
@@ -211,7 +229,8 @@ def get_current_profit_table():
     for miner in miners:
         for pool in pools:
             for algo in miners[miner]["benchmark"].keys():
-                value = calc_pool_profitability(pool, algo, miners[miner]["benchmark"][algo])
+                pool_algo = find_pool_algo_name(pool, algo)
+                value = calc_pool_profitability(pool, pool_algo, miners[miner]["benchmark"][algo])
                 if value > min_profit:
                     profit_table.append([miner, pool, algo, "{0:.5f}".format(value)])
     return sorted(profit_table, key=lambda x: x[3], reverse=True)
