@@ -139,6 +139,7 @@ def benchmark(miner, algo, pool, pool_params):
     time.sleep(5)
 
     if proc.returncode is None:
+        pool_algo = find_common_algos(pool, algo)
         max_hashrate = 0
         accepted_shares = 0
         revenue = 0
@@ -153,7 +154,7 @@ def benchmark(miner, algo, pool, pool_params):
             if hashrate > max_hashrate:
                 max_hashrate = hashrate
             if hashrate > 0:
-                revenue = calc_pool_profitability(pool, algo, hashrate)
+                revenue = calc_pool_profitability(pool, pool_algo, hashrate)
             print(
                 "[%s %s](%ss) Curr Profitability: USD %.4f Shares: %sA/%sR - Hashrate: %s/Max: %s                                \r" % (
                     miner, algo, (int(t_end - time.time()) if revenue > min_profit else int(t_give_up - time.time())), revenue, accepted_shares, int(ret["REJ"]), hashrate,
