@@ -139,7 +139,7 @@ def benchmark(miner, algo, pool, pool_params):
     time.sleep(5)
 
     if proc.returncode is None:
-        pool_algo = find_common_algos(pool, algo)
+        pool_algo = find_pool_algo_name(pool, algo)
         max_hashrate = 0
         accepted_shares = 0
         revenue = 0
