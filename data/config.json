@@ -15,6 +15,7 @@
         "sib",
         "scrypt",
         "skein",
-        "x11"
+        "x11",
+        "verthash"
     ]
 }

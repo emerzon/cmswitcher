@@ -189,7 +189,7 @@ def calc_pool_profitability(pool, algo, hashrate):
             revenues[field] = (float(pools[pool]["results"][algo][field])*1000) * (
                 (float(hashrate) / 1000000) / float(pools[pool]["results"][algo]["mbtc_mh_factor"])) * mbtc
 
-        fields = ['actual_last24h', 'actual_last24h_shared', 'actual_last24h_solo']
+        fields = ['actual_last24h']
         for field in fields:
             revenues[field] = float(pools[pool]["results"][algo][field]) * (
                     (float(hashrate) / 1000000) / float(pools[pool]["results"][algo]["mbtc_mh_factor"])) * mbtc
