@@ -1,0 +1,151 @@
+{
+    "cpuminer-opt": {
+        "binname_probe": "cpuminer-opt",
+        "launch_pattern": "-u {wallet} -o stratum+tcp://{url}:{port} -p {password} -b 127.0.0.1:40101",
+        "offline_bench_pattern": "--benchmark -b 127.0.0.1:40101",
+        "std_algos": [
+            "allium",
+            "anime",
+            "argon2",
+            "argon2d250",
+            "argon2d500",
+            "argon2d4096",
+            "axiom",
+            "blake",
+            "blake2b",
+            "blake2s",
+            "blakecoin",
+            "bmw",
+            "bmw512",
+            "c11",
+            "decred",
+            "deep",
+            "dmd-gr",
+            "groestl",
+            "hex",
+            "hmq1725",
+            "hodl",
+            "jha",
+            "keccak",
+            "keccakc",
+            "lbry",
+            "lyra2h",
+            "lyra2re",
+            "lyra2rev2",
+            "lyra2rev3",
+            "lyra2z",
+            "lyra2z330",
+            "m7m",
+            "myr-gr",
+            "minotaur",
+            "neoscrypt",
+            "nist5",
+            "pentablake",
+            "phi1612",
+            "phi2",
+            "polytimos",
+            "power2b",
+            "quark",
+            "qubit",
+            "scrypt",
+            "sha256d",
+            "sha256q",
+            "sha256t",
+            "sha3d",
+            "shavite3",
+            "skein",
+            "skein2",
+            "skunk",
+            "sonoa",
+            "timetravel",
+            "timetravel10",
+            "tribus",
+            "vanilla",
+            "veltor",
+            "whirlpool",
+            "whirlpoolx",
+            "x11",
+            "x11evo",
+            "x11gost",
+            "x12",
+            "x13",
+            "x13bcd",
+            "x13sm3",
+            "x14",
+            "x15",
+            "x16r",
+            "x16rv2",
+            "x16rt",
+            "x16rt-veil",
+            "x16s",
+            "x17",
+            "x21s",
+            "x25x",
+            "xevan",
+            "yescrypt",
+            "yescryptr8",
+            "yescryptr8g",
+            "yescryptr16",
+            "yescryptr32",
+            "yespower",
+            "yespowerr16",
+            "yespower-b2b",
+            "zr5"
+        ],
+        "custom_algos": {
+            "scryptn2": {
+                "--algo": "scrypt",
+                "--param-n": 1048576
+            },
+            "cpupower": {
+                "--algo": "yespower",
+                "--param-key": "CPUpower: The number of CPU working or available for proof-of-work mining"
+            },
+            "power2b": {
+                "--algo": "yespower-b2b",
+                "--param-n": 2048,
+                "--param-r": 32,
+                "--param-key": "Now I am become Death, the destroyer of worlds"
+            },
+            "sugarchain": {
+                "--algo": "yespower",
+                "--param-n": 2048,
+                "--param-r": 32,
+                "--param-key": "Satoshi Nakamoto 31/Oct/2008 Proof-of-work is essentially one-CPU-one-vote"
+            },
+            "yespoweriots": {
+                "--algo": "yespower",
+                "--param-n": 2048,
+                "--param-key": "Iots is committed to the development of IOT"
+            },
+            "yespowerlitb": {
+                "--algo": "yespower",
+                "--param-n": 2048,
+                "--param-r": 32,
+                "--param-key": "LITBpower: The number of LITB working or available for proof-of-work mini"
+            },
+            "yespoweric": {
+                "--algo": "yespower",
+                "--param-n": 2048,
+                "--param-r": 32,
+                "--param-key": "IsotopeC"
+            },
+            "yespowerurx": {
+                "--algo": "yespower",
+                "--param-n": 2048,
+                "--param-r": 32,
+                "--param-key": "UraniumX"
+            },
+            "yespowerltncg": {
+                "--algo": "yespower",
+                "--param-n": 2048,
+                "--param-r": 32,
+                "--param-key": "LTNCGYES"
+            },
+            "verthash": {
+                "--algo": "verthash",
+                "--verify": "--verify"
+            }
+        }
+    }
+}

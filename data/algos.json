@@ -1,0 +1,14 @@
+{
+    "argon2d500": [
+        "argon2d-dyn"
+    ],
+    "lyra2re": [
+        "lyra2"
+    ],
+    "power2b": [
+        "yespower2b"
+    ],
+    "x13bcd": [
+        "bcd"
+    ]
+}

@@ -1,0 +1,8 @@
+{
+    "zergpool": {
+        "api": "http://api.zergpool.com:8080/api/status",
+        "mine_url": "{algo}.mine.zergpool.com",
+        "wallet": "ME1xYgz1mtCTiJW7UMEP82S7NeQoJvwL7o",
+        "password": "c=LTC,d=0.01"
+    }
+}

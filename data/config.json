@@ -1,0 +1,20 @@
+{
+    "benchmark_period": 120,
+    "complete_benchmark_min_shares": 20,
+    "give_up_benchmark_low_profit_secs": 30,
+    "min_profit": 0.05,
+    "blacklisted_algos": [
+        "blake2b",
+        "blake2s",
+        "myr-gr",
+        "neoscrypt",
+        "groestl",
+        "tribus",
+        "quark",
+        "qubit",
+        "sib",
+        "scrypt",
+        "skein",
+        "x11"
+    ]
+}

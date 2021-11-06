@@ -6,32 +6,19 @@ import socket
 import json
 import time
 from tabulate import tabulate
+import argparse
 
-benchmark_period = 120
-complete_benchmark_min_shares = 5
-give_up_benchmark_low_profit_secs = 30
-
-miners = {"cpuminer-opt": {"url": "https://chita.com.br/miners/cpuminer-opt-%s.tar.bz2",
-                           "launch_pattern": "-u {wallet} -o stratum+tcp://{url}:{port} -p {password} -b 127.0.0.1:40101",
-                           "offline_bench_pattern": "--benchmark -b 127.0.0.1:40101"},
-          "cpuminer-rkz": {"url": "https://chita.com.br/miners/cpuminer-rkz-%s.tar.bz2",
-                           "launch_pattern": "-u {wallet} -o stratum+tcp://{url}:{port} -p {password} -b 127.0.0.1:40101",
-                           "offline_bench_pattern": "--benchmark -b 127.0.0.1:40101"}}
-pools = {"zergpool": {"api": "http://api.zergpool.com:8080/api/status",
-                      "mine_url": "{algo}.mine.zergpool.com",
-                      "wallet": "ME1xYgz1mtCTiJW7UMEP82S7NeQoJvwL7o",
-                      "password": "c=LTC,sd=1"}}
-
-algo_name_variations = [
-    ['argon2d500', 'argon2d-dyn'],
-    ['power2b', 'yespower2b']
-]
+config = json.load(open("data/config.json"))
+miners = json.load(open('data/miners.json'))
+pools = json.load(open('data/pools.json'))
+algos = json.load(open('data/algos.json'))
 
 # Inits
 mbtc_value = 0
-min_profit = 0.05
-blacklisted_algos = []
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--cpuminer', help='cpuminer binary location')
+args = parser.parse_args()
 
 def get_api_data():
     resp = ""
@@ -43,16 +30,6 @@ def get_api_data():
     s.close()
     return {k: v for k, v in (x.split("=") for x in resp.split(";"))}
 
-
-def get_cpuflags_hash():
-    return []
-    # This generates a unique 8-digit value which identifies this specific CPU capabilities
-    # zen    = 5c6a2fc9
-    # zen-tr = 0a8e7444
-    # zen2   = 46b820de
-    # 'cat /proc/cpuinfo | grep flags | uniq | md5sum | cut -b 1-8'
-
-
 def find_pool_algo_name(pool, algo):
     result = None
     if algo in pools[pool]["results"].keys():
@@ -62,34 +39,12 @@ def find_pool_algo_name(pool, algo):
             if entry.lower() == algo.lower():
                 result = entry
     if result is None:
-        for variation in algo_name_variations:
+        for variation in algos:
             if algo in variation:
                 for entry in variation:
                     if entry in pools[pool]["results"].keys():
                         result = entry
     return result
-
-
-def miner_find_supported_algo(miner_name):
-    print("Probing miner %s..." % miner_name, end="")
-    if miner_name in ['cpuminer-opt']:
-        out = subprocess.check_output([miner_name, "-h"]).decode("utf-8")
-        # This is super ugly and might break in different versions... :(
-        match = re.findall(r'(?!^\s*[-(].*$)^\s{20,26}(.*?)(?:\s).*$', out, re.MULTILINE)
-    elif miner_name in ['cpuminer-rkz']:
-        out = subprocess.check_output([miner_name, "-h"]).decode("utf-8")
-        # This is super ugly and might break in different versions... :(
-        match = re.findall(r'^\s+(\w+power.*?)\s+(?:\s).*$', out, re.MULTILINE)
-    elif miner_name in ['xmrig']:
-        match = ['cn-pico/tlo', 'rx/sfx', 'rx/arq', 'rx/0', 'argon2/chukwa', 'argon2/wrkz', 'rx/wow', 'rx/loki',
-                 'cn/fast', 'cn/rwz', 'cn/zls', 'cn/double', 'cn/r', 'cn/gpu', 'cn-pico', 'cn/half', 'cn/2', 'cn/xao',
-                 'cn/rto', 'cn-heavy/tube', 'cn-heavy/xhv', 'cn-heavy/0', 'cn/1', 'cn-lite/1', 'cn-lite/0', 'cn/0']
-    else:
-        match = []
-    print("%s algos supported" % len(match))
-    print(match)
-    return match
-
 
 def pool_find_supported_algo(pool):
     print("Probing pool %s..." % pool, end="")
@@ -97,7 +52,6 @@ def pool_find_supported_algo(pool):
     match = list(pools[pool]["results"].keys())
     print("%s algos supported" % len(match))
     return match
-
 
 def find_common_algos(list1, list2):
     results = {}
@@ -109,26 +63,45 @@ def find_common_algos(list1, list2):
                 if item1.lower() == item2.lower():
                     results.update({item1: item2})
                 else:
-                    for entry in algo_name_variations:
-                        if item1 in entry and item2 in entry:
+                    for entry in algos:
+                        #print (entry + " " + item1 + " " + item2)
+                        if (item1 == entry) and (item2 == entry):
+                            print ("Adding '%s' as a name variation of '%s'" % (item1, item2))
                             results.update({item1: item2})
+    
     return results
 
 
 def populate_supported_algos():
     for miner in miners.keys():
-        miners[miner]["supported_algos"] = miner_find_supported_algo(miner)
-        # print(miners[miner]["supported_algos"])
+        print("Probing miner %s..." % miner, end="")
+        miners[miner]["supported_algos"] = miners[miner]["std_algos"] + list(miners[miner]["custom_algos"].keys())
+        print("%s algos supported" % len(miners[miner]["supported_algos"]))
+        print(miners[miner]["supported_algos"])
 
     for pool in pools.keys():
         pools[pool]["supported_algos"] = pool_find_supported_algo(pool)
-        # print(pools[pool]["supported_algos"])
+        print(pools[pool]["supported_algos"])
 
 
 def benchmark(miner, algo, pool, pool_params):
+    if algo in miners[miner]["std_algos"]:
+        launch_params = ["-a", algo]
+    else:
+        launch_params = []
+        for k, v in miners[miner]["custom_algos"][algo].items():
+            launch_params.append(str(k))
+            launch_params.append(str(v))        
+
     if isinstance(pool_params, dict):
         print("Online benchmark for %s - %s on %s" % (miner, algo, pool_params["url"]))
-        proc = subprocess.Popen([miner, '-a', algo] + miners[miner]["launch_pattern"].format(**pool_params).split(" "),
+        if args.cpuminer is not None:
+            cmdline = [args.cpuminer]
+        else:
+            cmdline = [miner]
+        cmdline += launch_params + miners[miner]["launch_pattern"].format(**pool_params).split(" ")
+        print (cmdline)
+        proc = subprocess.Popen(cmdline,
                                 stdout=subprocess.PIPE)
     else:
         print("Offline benchmark for %s - %s" % (miner, algo))
@@ -143,11 +116,11 @@ def benchmark(miner, algo, pool, pool_params):
         max_hashrate = 0
         accepted_shares = 0
         revenue = 0
-        t_end = time.time() + benchmark_period
-        t_give_up = time.time() + give_up_benchmark_low_profit_secs
+        t_end = time.time() + config["benchmark_period"]
+        t_give_up = time.time() +  config["give_up_benchmark_low_profit_secs"]
         while time.time() < t_end and \
-                accepted_shares < complete_benchmark_min_shares and \
-                (time.time() < t_give_up or revenue > min_profit):
+                accepted_shares <  config["complete_benchmark_min_shares"] and \
+                (time.time() < t_give_up or revenue > config["min_profit"]):
             ret = get_api_data()
             hashrate = float(ret["HS"])
             accepted_shares = int(ret["ACC"])
@@ -157,13 +130,13 @@ def benchmark(miner, algo, pool, pool_params):
                 revenue = calc_pool_profitability(pool, pool_algo, hashrate)
             print(
                 "[%s %s](%ss) Curr Profitability: USD %.4f Shares: %sA/%sR - Hashrate: %s/Max: %s                                \r" % (
-                    miner, algo, (int(t_end - time.time()) if revenue > min_profit else int(t_give_up - time.time())), revenue, accepted_shares, int(ret["REJ"]), hashrate,
+                    miner, algo, (int(t_end - time.time()) if revenue > config["min_profit"] else int(t_give_up - time.time())), revenue, accepted_shares, int(ret["REJ"]), hashrate,
                     max_hashrate), end="")
             time.sleep(1)
         proc.kill()
         print("[FINISHED]: Using hashrate %s for %s (%s accepted shares)                                                           " % (
-            max_hashrate, algo, accepted_shares))
-        use_rate = max_hashrate
+            hashrate, algo, accepted_shares))
+        use_rate = hashrate
         if accepted_shares == 0:
             print("[WARNING]: No accepted shares!")
     else:
@@ -193,7 +166,7 @@ def run_all_benchmarks(skip_existing):
             print("Miner %s and pool %s have %s algos in common" % (miner, pool, len(common_algos.keys())))
             for algo in common_algos.keys():
                 if (algo not in miners[miner][
-                    "benchmark"].keys() or not skip_existing) and algo not in blacklisted_algos:
+                    "benchmark"].keys() or not skip_existing) and algo not in config["blacklisted_algos"]:
                     # Launch bench here
                     pool_params = {"algo": algo,
                                    "wallet": pools[pool]["wallet"],
@@ -232,7 +205,7 @@ def get_current_profit_table():
             for algo in miners[miner]["benchmark"].keys():
                 pool_algo = find_pool_algo_name(pool, algo)
                 value = calc_pool_profitability(pool, pool_algo, miners[miner]["benchmark"][algo])
-                if value > min_profit:
+                if value > config["min_profit"]:
                     profit_table.append([miner, pool, algo, "{0:.5f}".format(value)])
     return sorted(profit_table, key=lambda x: x[3], reverse=True)
 
