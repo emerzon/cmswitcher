@@ -2,13 +2,13 @@
     "zergpool": {
         "api": "http://api.zergpool.com:8080/api/status",
         "mine_url": "{algo}.mine.zergpool.com",
-        "wallet": "ME1xYgz1mtCTiJW7UMEP82S7NeQoJvwL7o",
+        "wallet": "M8C1jQRnrkwSkDJrcni96Kq67KV5DSDkMT.bench",
         "password": "c=LTC,sd=0.0001"
     },
     "zpool": {
         "api": "http://zpool.ca/api/status",
         "mine_url": "{algo}.mine.zpool.ca",
-        "wallet": "ME1xYgz1mtCTiJW7UMEP82S7NeQoJvwL7o",
+        "wallet": "M8C1jQRnrkwSkDJrcni96Kq67KV5DSDkMT.bench",
         "password": "c=LTC,sd=0.0001"
     }
 }
