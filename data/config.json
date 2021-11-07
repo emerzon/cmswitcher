@@ -1,12 +1,16 @@
 {
     "benchmark_period": 120,
-    "complete_benchmark_min_shares": 20,
+    "complete_benchmark_min_shares": 100,
     "give_up_benchmark_low_profit_secs": 30,
     "min_profit": 0.05,
     "blacklisted_algos": [
         "blake2b",
         "blake2s",
+        "blakecoin",        
+        "lbry",
+        "keccakc",
         "myr-gr",
+        "nist",
         "neoscrypt",
         "groestl",
         "tribus",
@@ -16,6 +20,7 @@
         "scrypt",
         "skein",
         "x11",
+        "x12",
         "verthash"
     ]
 }
