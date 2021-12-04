@@ -15,5 +15,6 @@
         "api": "https://www.nlpool.nl/api/status",
         "mine_url": "nlpool.nl",
         "wallet": "M8C1jQRnrkwSkDJrcni96Kq67KV5DSDkMT.bench",
-        "password": "c=LTC,sd=0.0001"    }
+        "password": "c=LTC,sd=0.0001"
+    }
 }
