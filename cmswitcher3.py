@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import subprocess
-import re
+import psutil
 import requests
 import socket
 import json
@@ -101,6 +101,7 @@ def benchmark(miner, algo, pool, pool_params):
             cmdline = [miner]
         cmdline += launch_params + miners[miner]["launch_pattern"].format(**pool_params).split(" ")
         print (cmdline)
+        
         proc = subprocess.Popen(cmdline,
                                 stdout=subprocess.PIPE)
     else:
@@ -108,6 +109,11 @@ def benchmark(miner, algo, pool, pool_params):
         proc = subprocess.Popen([miner, '-a', algo] + miners[miner]["offline_bench"].split(" "), stdout=subprocess.PIPE)
 
     # print("Launched pid %s" % proc.pid)
+    res = proc.communicate()
+    if proc.returncode is not None:        
+        print("Miner crashed - Unsupported algo?")
+        return 0
+ 
     # UGLY HACK - To be fixed
     time.sleep(5)
 
@@ -116,14 +122,20 @@ def benchmark(miner, algo, pool, pool_params):
         max_hashrate = 0
         accepted_shares = 0
         revenue = 0
+        rejected_shares = 0
         t_end = time.time() + config["benchmark_period"]
         t_give_up = time.time() +  config["give_up_benchmark_low_profit_secs"]
         while time.time() < t_end and \
                 accepted_shares <  config["complete_benchmark_min_shares"] and \
-                (time.time() < t_give_up or revenue > config["min_profit"]):
+                (time.time() < t_give_up or revenue > config["min_profit"]) and \
+                rejected_shares < config["max_rejected_shares"]:
             ret = get_api_data()
-            hashrate = float(ret["HS"])
+            if "HS" in ret.keys():
+               hashrate = int(ret["HS"])
+            elif "KHS" in ret.keys():
+                hashrate = int(ret["KHS"]) * 1000
             accepted_shares = int(ret["ACC"])
+            rejected_shares = int(ret["REJ"])
             if hashrate > max_hashrate:
                 max_hashrate = hashrate
             if hashrate > 0:

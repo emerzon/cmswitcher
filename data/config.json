@@ -3,6 +3,7 @@
     "complete_benchmark_min_shares": 100,
     "give_up_benchmark_low_profit_secs": 30,
     "min_profit": 0.05,
+    "max_rejected_shares": 2,
     "blacklisted_algos": [
         "blake2b",
         "blake2s",
