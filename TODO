@@ -1,0 +1,3 @@
+* Add memory requirements/check for algos;
+* Automatically launch (and switch) miners after benchmarks;
+* Probe different thread number combinations per algo (all threads, physical cores only, reduced cores, etc)
