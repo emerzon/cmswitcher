@@ -108,14 +108,17 @@ def benchmark(miner, algo, pool, pool_params):
         proc = subprocess.Popen([miner, '-a', algo] + miners[miner]["offline_bench"].split(" "), stdout=subprocess.PIPE)
 
     # print("Launched pid %s" % proc.pid)
-    res = proc.communicate()
-    if proc.returncode is not None:        
-        print("Miner crashed - Unsupported algo?")
+    
+    try:
+        outs, errs = proc.communicate(timeout=5)
+    except subprocess.TimeoutExpired:
+        pass
+
+    if proc.returncode is not None:
+        print("Miner crashed!! - Unsupported algo?")
+        print (str(outs), str(errs))
         return 0
  
-    # UGLY HACK - To be fixed
-    time.sleep(5)
-
     if proc.returncode is None:
         pool_algo = find_pool_algo_name(pool, algo)
         max_hashrate = 0
@@ -130,9 +133,9 @@ def benchmark(miner, algo, pool, pool_params):
                 rejected_shares < config["max_rejected_shares"]:
             ret = get_api_data()
             if "HS" in ret.keys():
-               hashrate = int(ret["HS"])
+               hashrate = int(float(ret["HS"]))
             elif "KHS" in ret.keys():
-                hashrate = int(ret["KHS"]) * 1000
+                hashrate = int(float(ret["KHS"]) * 1000)
             accepted_shares = int(ret["ACC"])
             rejected_shares = int(ret["REJ"])
             if hashrate > max_hashrate:

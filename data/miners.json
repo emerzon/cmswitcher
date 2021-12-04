@@ -4,7 +4,6 @@
         "launch_pattern": "-u {wallet} -o stratum+tcp://{url}:{port} -p {password} -b 127.0.0.1:40101",
         "offline_bench_pattern": "--benchmark -b 127.0.0.1:40101",
         "std_algos": [
-            "arctichash",
             "allium",
             "anime",
             "argon2",
