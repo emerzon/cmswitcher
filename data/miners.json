@@ -135,6 +135,18 @@
                 "--param-r": 32,
                 "--param-key": "IsotopeC"
             },
+            "yespoweritc": {
+                "--algo": "yespower",
+                "--param-n": 2048,
+                "--param-r": 32,
+                "--param-key": "InterITC"
+            },
+            "yespowermgpc": {
+                "--algo": "yespower",
+                "--param-n": 2048,
+                "--param-r": 32,
+                "--param-key": "Magpies are birds of the Corvidae family."
+            },
             "yespowerurx": {
                 "--algo": "yespower",
                 "--param-n": 2048,
