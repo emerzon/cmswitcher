@@ -11,7 +11,10 @@ import os
 # Read config
 
 try:
-    config, miners, pools, algos = [(json.load(open(f"data/{file}.json")) for file in ["config", "miners", "pools", "algos"])]
+    config = json.load(open("data/config.json"))
+    miners = json.load(open("data/miners.json"))
+    pools = json.load(open("data/pools.json"))
+    algos = json.load(open("data/algos.json"))
 except FileNotFoundError:
     print("Missing data files.")
     exit()
