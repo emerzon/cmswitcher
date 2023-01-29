@@ -6,19 +6,27 @@ import json
 import time
 from tabulate import tabulate
 import argparse
+import os
 
-config = json.load(open("data/config.json"))
-miners = json.load(open('data/miners.json'))
-pools = json.load(open('data/pools.json'))
-algos = json.load(open('data/algos.json'))
+# Read config
+
+try:
+    config, miners, pools, algos = [(json.load(open(f"data/{file}.json")) for file in ["config", "miners", "pools", "algos"])]
+except FileNotFoundError:
+    print("Missing data files.")
+    exit()
 
 # Inits
 mbtc_value = 0
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--cpuminer', help='cpuminer binary location')
+parser.add_argument('--cpuminer', help='cpuminer binary location', default='cpuminer')
 args = parser.parse_args()
 
+# Check if cpuminer is available
+if not os.path.isfile(args.cpuminer):
+    print("cpuminer not found at %s" % args.cpuminer)
+    exit()
 
 def get_api_data():
     resp = ""
@@ -101,13 +109,10 @@ def benchmark(miner, algo, pool, pool_params):
     if isinstance(pool_params, dict):
         print("Online benchmark for %s - %s on %s" %
               (miner, algo, pool_params["url"]))
-        if args.cpuminer is not None:
-            cmdline = [args.cpuminer]
-        else:
-            cmdline = [miner]
+        cmdline = [args.cpuminer]
         cmdline += launch_params + \
             miners[miner]["launch_pattern"].format(**pool_params).split(" ")
-        print(cmdline)
+        print(" ".join(cmdline))
 
         proc = subprocess.Popen(cmdline,
                                 stdout=subprocess.PIPE)
