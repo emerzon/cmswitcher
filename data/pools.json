@@ -10,11 +10,5 @@
         "mine_url": "{algo}.mine.zpool.ca",
         "wallet": "D9fsSxiyYA87MdjdeDyKQxkj8zooPp5tFp.bench",
         "password": "c=DOGE,sd=0.0001"
-    },
-    "nlpool": {
-        "api": "https://www.nlpool.nl/api/status",
-        "mine_url": "nlpool.nl",
-        "wallet": "D9fsSxiyYA87MdjdeDyKQxkj8zooPp5tFp.bench",
-        "password": "c=DOGE,sd=0.0001"
     }
 }

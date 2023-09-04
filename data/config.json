@@ -2,8 +2,9 @@
     "benchmark_period": 120,
     "complete_benchmark_min_shares": 100,
     "give_up_benchmark_low_profit_secs": 30,
-    "min_profit": 0.05,
+    "min_profit": 0.05,    
     "max_rejected_shares": 2,
+    "session_timeout": 600,
     "blacklisted_algos": [
         "allium",
         "blake2b",
