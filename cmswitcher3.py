@@ -272,8 +272,8 @@ if __name__ == "__main__":
     # Start a session for the most profitable algo. After session_timeout, check if the algo is still the most profitable. If so, just loop. If not, restart the session.
 
     current_algo = ""
-    start_time = time.time()
     while True:
+        dstart_time = time.time()
         most_profitable = get_current_profit_table()[0]
         most_profitable_algo = most_profitable[2]
         most_profitable_miner = most_profitable[0]
@@ -319,6 +319,8 @@ if __name__ == "__main__":
             rejected_shares = int(ret["REJ"])
             revenue = calc_pool_profitability(
                 most_profitable_pool, pool_algo, hashrate)
+            # limit revenue to 3 decimals
+            revenue = float("{0:.3f}".format(revenue))
             print(
                 f"Current profitability: {revenue} USD/day - Hashrate: {hashrate} - Shares: {accepted_shares}A/{rejected_shares}R", end="\r")
             time.sleep(1)
