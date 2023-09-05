@@ -273,7 +273,7 @@ if __name__ == "__main__":
 
     current_algo = ""
     while True:
-        dstart_time = time.time()
+        start_time = time.time()
         most_profitable = get_current_profit_table()[0]
         most_profitable_algo = most_profitable[2]
         most_profitable_miner = most_profitable[0]
