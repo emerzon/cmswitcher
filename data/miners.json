@@ -1,7 +1,7 @@
 {
     "cpuminer-opt": {
         "binname_probe": "cpuminer-opt",
-        "launch_pattern": "-u {wallet} -o stratum+tcp://{url}:{port} -p {password} -b 127.0.0.1:40101 -t 1 --cpu-affinity 4194304 --cpu-priority 1",
+        "launch_pattern": "-u {wallet} -o stratum+tcp://{url}:{port} -p {password} -b {API_HOST}:{API_PORT}",
         "offline_bench_pattern": "--benchmark -b 127.0.0.1:40101",
         "std_algos": [
             "allium",

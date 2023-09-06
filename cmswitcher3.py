@@ -52,7 +52,9 @@ def create_pool_params(pool, algo):
         "wallet": pools[pool]["wallet"],
         "password": pools[pool]["password"],
         "url": pools[pool]["mine_url"].format(algo=pool_algo),
-        "port": pools[pool]["results"][pool_algo]["port"]
+        "port": pools[pool]["results"][pool_algo]["port"],
+        "API_PORT": API_PORT,
+        "API_HOST": API_HOST
     }
 
 def create_cmdline(miner, algo, pool_params):
@@ -302,7 +304,11 @@ if __name__ == "__main__":
     proc = None
     while True:
         start_time = time.time()
-        print (get_current_profit_table()[0])
+        if len (get_current_profit_table()) == 0:
+            print ("No profitable algo found, waiting 60 seconds before retrying...\n\Check your config.json for the minimum profitability threshold.")
+            time.sleep (60)
+            continue
+        
         most_profitable_miner, most_profitable_pool, most_profitable_algo, _ = get_current_profit_table()[0]
 
 
