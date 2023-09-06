@@ -311,7 +311,6 @@ if __name__ == "__main__":
         
         most_profitable_miner, most_profitable_pool, most_profitable_algo, _ = get_current_profit_table()[0]
 
-
         if current_algo != most_profitable_algo:
             if proc is not None:
                 print(f"Switching away from {current_algo}")
@@ -331,8 +330,12 @@ if __name__ == "__main__":
             print(f"Launched pid {proc.pid}")
 
         while start_time + config["session_timeout"] > time.time():
-            # Retrieve hashrate and profitability
+            # Check if the subprocess is still running
+            if proc.poll() is not None:
+                print("Subprocess has terminated. Restarting...")
+                break
 
+            # Retrieve hashrate and profitability
             hashrate, accepted_shares, rejected_shares = get_hashrate_and_shares()
 
             revenue = calc_pool_profitability(
@@ -341,4 +344,4 @@ if __name__ == "__main__":
             revenue = float("{0:.3f}".format(revenue))
             print(
                 f"Current profitability: {revenue} USD/day - Hashrate: {hashrate} - Shares: {accepted_shares}A/{rejected_shares}R", end="\r")
-            time.sleep(1)            
+            time.sleep(1)
